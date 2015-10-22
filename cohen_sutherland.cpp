@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <graphics.h>
+#include <conio.h>
+#include <math.h>
+#define TRUE 1
+#define FALSE 0
+typedef unsigned int outcode;
+outcode CompOutCode(float x,float y);
+enum  {  TOP = 0x1,
+BOTTOM = 0x2,
+RIGHT = 0x4,
+LEFT = 0x8
+};
+float xmin,xmax,ymin,ymax;
+void clip(float x0,float y0,float x1,float y1)
+{
+outcode outcode0,outcode1,outcodeOut;
+int accept = FALSE,done = FALSE;
+outcode0 = CompOutCode(x0,y0);
+outcode1 = CompOutCode(x1,y1);
+do
+{
+if(!(outcode0|outcode1))
+{
+accept = TRUE;
+done = TRUE;
+}
+else
+if(outcode0 & outcode1)
+done = TRUE;
+else
+{
+float x,y;
+outcodeOut = outcode0?outcode0:outcode1;
+if(outcodeOut & TOP)
+{
+  
+x = x0+(x1-x0)*(ymax-y0)/(y1-y0);
+y = ymax;
+}
+else
+if(outcodeOut & BOTTOM)
+{
+x = x0+(x1-x0)*(ymin-y0)/(y1-y0);
+y = ymin;
+}
+else
+if(outcodeOut & RIGHT)
+{
+y = y0+(y1-y0)*(xmax-x0)/(x1-x0);
+x = xmax;
+}
+else
+{
+y = y0+(y1-y0)*(xmin-x0)/(x1-x0);
+x = xmin;
+}
+if(outcodeOut==outcode0)
+{
+x0 = x;
+y0 = y;
+outcode0 = CompOutCode(x0,y0);
+}
+else
+{
+x1 = x;
+y1 = y;
+outcode1 = CompOutCode(x1,y1);
+}
+}
+}while(done==FALSE);
+if(accept)
+line(x0,y0,x1,y1);
+outtextxy(200,20,"LINE AFTER CLIPPING");
+rectangle(xmin,ymin,xmax,ymax);
+}
+  
+outcode CompOutCode(float x,float y)
+{
+outcode code = 0;
+if(y>ymax)
+code|=TOP;
+else
+if(y<ymin)
+code|=BOTTOM;
+if(x>xmax)
+code|=RIGHT;
+else
+if(x<xmin)
+code|=LEFT;
+return code;
+}
+main( )
+{
+float x1,y1,x2,y2;
+int gdriver = DETECT, gmode ;
+printf("\nEnter the endpoints of line\n");
+scanf("%f%f%f%f",&x1,&y1,&x2,&y2);
+printf("Enter the rectangular coordinates of clipping window\n");
+scanf("%f%f%f%f",&xmin,&ymin,&xmax,&ymax);
+/* initialize graphics and local variables */
+initgraph(&gdriver, &gmode, "c:\\tc\\bgi");
+outtextxy(200,20,"LINE BEFORE CLIPPING");
+line(x1,y1,x2,y2);
+rectangle(xmin,ymin,xmax,ymax);
+getch( );
+cleardevice( );
+clip(x1,y1,x2,y2);
+getch( );
+restorecrtmode( );
+}
